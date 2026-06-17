@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seb'Interactal — Aperçu gratuit</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:     #4A8DB5;
+  --blue-lt:  #E6F1FB;
+  --blue-dk:  #2C5F7A;
+  --amber:    #EF9F27;
+  --amber-lt: #FFF3DC;
+  --green:    #5DCAA5;
+  --green-lt: #EAF7F2;
+  --bg:       #F8F6F0;
+  --text:     #1A1A2E;
+  --muted:    #6B7280;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 60px;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+  max-width: 640px;
+}
+
+.logo {
+  display: inline-block;
+  background: var(--blue);
+  color: white;
+  font-size: 26px;
+  font-weight: bold;
+  padding: 10px 28px;
+  border-radius: 14px;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+
+.logo span {
+  color: var(--amber);
+}
+
+.tagline {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--blue-dk);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.desc {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ÉTIQUETTE APERÇU */
+.apercu-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.apercu-label::before,
+.apercu-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #D0CEC8;
+}
+
+.apercu-label span {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* CARTES SÉANCES */
+.seances {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 580px;
+  margin-bottom: 48px;
+}
+
+.seance-card {
+  background: white;
+  border-radius: 18px;
+  border: 2px solid #E8E6E0;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.seance-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 4px 20px rgba(74, 141, 181, 0.15);
+  transform: translateY(-2px);
+}
+
+.seance-num {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.s5  .seance-num { background: #E6F1FB; color: var(--blue-dk); }
+.s20 .seance-num { background: var(--amber-lt); color: #7A4F0A; }
+.s34 .seance-num { background: var(--green-lt); color: #1A6B4A; }
+
+.seance-num .num { font-size: 20px; line-height: 1; }
+.seance-num .label { font-size: 10px; opacity: 0.7; margin-top: 1px; }
+
+.seance-info { flex: 1; }
+
+.seance-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.seance-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.seance-repr {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.s5  .seance-repr { background: #E6F1FB; color: var(--blue); }
+.s20 .seance-repr { background: var(--amber-lt); color: #9A6010; }
+.s34 .seance-repr { background: var(--green-lt); color: #1A6B4A; }
+
+.arrow {
+  font-size: 20px;
+  color: #C0BDB8;
+  flex-shrink: 0;
+}
+
+.seance-card:hover .arrow { color: var(--blue); }
+
+/* PROGRESSION */
+.progression {
+  width: 100%;
+  max-width: 580px;
+  background: white;
+  border-radius: 18px;
+  border: 2px solid #E8E6E0;
+  padding: 24px;
+  margin-bottom: 48px;
+}
+
+.progression-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.steps {
+  display: flex;
+  gap: 0;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #C0BDB8;
+  font-size: 16px;
+}
+
+.step-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.step-label {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  max-width: 580px;
+}
+
+.footer-badge {
+  display: inline-block;
+  background: var(--amber-lt);
+  color: #7A4F0A;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 8px 20px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+
+.footer-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.footer-copy {
+  margin-top: 32px;
+  font-size: 11px;
+  color: #B0ADA8;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Seb'<span>Interactal</span></div>
+  <div class="tagline">Une année complète de résolution de problèmes en CP</div>
+  <div class="desc">Addition, soustraction, multiplication — du dessin libre au schéma en barres.<br>75 séances interactives pour TBI, progressives et clé en main.</div>
+</div>
+
+<div style="width:100%;max-width:580px">
+  <div class="apercu-label"><span>3 séances en accès libre</span></div>
+</div>
+
+<div class="seances">
+
+  <a class="seance-card s5" href="séance 5.html">
+    <div class="seance-num">
+      <div class="num">5</div>
+      <div class="label">SÉANCE</div>
+    </div>
+    <div class="seance-info">
+      <div class="seance-title">Je cherche un TOUT</div>
+      <div class="seance-sub">3 situations — guidée par l'enseignant</div>
+      <div class="seance-repr">✏️ Je dessine</div>
+    </div>
+    <div class="arrow">›</div>
+  </a>
+
+  <a class="seance-card s20" href="séance 20.html">
+    <div class="seance-num">
+      <div class="num">20</div>
+      <div class="label">SÉANCE</div>
+    </div>
+    <div class="seance-info">
+      <div class="seance-title">Je cherche un TOUT</div>
+      <div class="seance-sub">3 situations — guidée par l'enseignant</div>
+      <div class="seance-repr">🟦 J'utilise des cubes</div>
+    </div>
+    <div class="arrow">›</div>
+  </a>
+
+  <a class="seance-card s34" href="séance_34.html">
+    <div class="seance-num">
+      <div class="num">34</div>
+      <div class="label">SÉANCE</div>
+    </div>
+    <div class="seance-info">
+      <div class="seance-title">Je cherche un TOUT</div>
+      <div class="seance-sub">3 situations — guidée par l'enseignant</div>
+      <div class="seance-repr">📊 J'utilise des bandes</div>
+    </div>
+    <div class="arrow">›</div>
+  </a>
+
+</div>
+
+<div class="progression">
+  <div class="progression-title">Structure de chaque séance</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">🔍</div>
+      <div class="step-label">Je comprends<br>le problème</div>
+    </div>
+    <div class="step">
+      <div class="step-icon">✏️</div>
+      <div class="step-label">Je représente</div>
+    </div>
+    <div class="step">
+      <div class="step-icon">🔢</div>
+      <div class="step-label">Je calcule</div>
+    </div>
+    <div class="step">
+      <div class="step-icon">✅</div>
+      <div class="step-label">Je réponds</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-badge">📦 Pack complet disponible</div>
+  <div class="footer-text">
+    75 séances TBI · 6 applications tablettes · 134 exercices papier<br>
+    Matériel plastifiable · Guide d'accompagnement
+  </div>
+  <div class="footer-copy">© 2025 Seb'Interactal — Usage classe et IEF uniquement</div>
+</div>
+
+</body>
+</html>
