@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Séance 5 — TBI Maître — 3 situations | Seb'Interactal</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --blue:      #4A8DB5;  --blue-lt:   #E6F1FB;
+  --amber:     #EF9F27;  --amber-lt:  #FFF9E6;
+  --green:     #5DCAA5;  --green-lt:  #EAF3DE;  --green-dk: #085041;
+  --coral:     #D85A30;  --coral-lt:  #FAECE7;
+  --purple:    #7F77DD;  --purple-lt: #EEEDFE;
+  --pink:      #E91E8C;  --pink-lt:   #FCE4F3;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #F8F6F0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 14px;
+}
+
+.app {
+  width: 100%; max-width: 960px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--blue); border-radius: 16px;
+  padding: 13px 22px; display: flex;
+  justify-content: space-between; align-items: center;
+}
+.header-title { color: white; font-size: 22px; font-weight: bold; }
+.header-sub   { color: #B5D4F4; font-size: 13px; margin-top: 2px; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.badge { padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; white-space: nowrap; }
+.badge-etape { background: #FAC775; color: #633806; }
+.badge-sit   { background: rgba(255,255,255,0.2); color: white; }
+
+/* ── SITUATION SELECTOR ── */
+.sit-selector { display: flex; gap: 8px; }
+.sit-btn {
+  flex: 1; padding: 11px 8px; border-radius: 14px;
+  border: 2.5px solid #D0D0C8; background: white;
+  font-size: 14px; font-weight: bold; color: #999;
+  cursor: pointer; text-align: center; transition: all 0.2s;
+  line-height: 1.4;
+}
+.sit-btn .sit-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+.sit-btn.active { border-color: var(--blue); background: var(--blue); color: white; }
+.sit-btn.done   { border-color: var(--green); background: var(--green-lt); color: var(--green-dk); }
+.sit-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
+
+/* ── ÉTAPES NAV ── */
+.etapes-nav { display: flex; gap: 8px; }
+.etape-btn {
+  flex: 1; padding: 9px 6px; border-radius: 12px;
+  border: 2px solid #D0D0C8; background: white;
+  font-size: 13px; font-weight: bold; color: #999;
+  cursor: pointer; text-align: center; transition: all 0.2s; line-height: 1.3;
+}
+.etape-btn.active { border-color: var(--blue); background: var(--blue); color: white; }
+.etape-btn.done   { border-color: var(--green); background: var(--green-lt); color: var(--green-dk); }
+.etape-btn:hover:not(.active):not(.done) { border-color: var(--blue); color: var(--blue); }
+.etape-num-circle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%; font-size: 11px;
+  margin-bottom: 2px; background: rgba(255,255,255,0.3);
+}
+.etape-btn.active .etape-num-circle { background: rgba(255,255,255,0.35); }
+.etape-btn.done .etape-num-circle   { background: var(--green); color: white; }
+
+/* ── ÉNONCÉ ── */
+.enonce-card {
+  border: 2.5px solid var(--amber); border-radius: 16px;
+  padding: 14px 18px; display: flex; gap: 16px; align-items: center;
+}
+.enonce-card.s1 { background: #FFF9E6; }
+.enonce-card.s2 { background: #FFF0F5; }
+.enonce-card.s3 { background: var(--purple-lt); border-color: var(--purple); }
+.enonce-text { flex: 1; font-size: 21px; color: #333; line-height: 1.7; }
+.enonce-text .question { font-size: 19px; font-weight: bold; color: #222; display: block; margin-top: 6px; }
+.enonce-photo {
+  width: 160px; height: 120px;
+  border: 2px dashed #EF9F27; border-radius: 12px;
+  background: rgba(255,255,255,0.5);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; gap: 6px;
+}
+.enonce-card.s3 .enonce-photo { border-color: var(--purple); }
+.ph-icon  { font-size: 64px; opacity: 1; line-height:1; }
+.ph-label { display:none; }
+.enonce-card.s3 .ph-label { display:none; }
+
+/* ── PANEL ── */
+.panel {
+  background: white; border-radius: 16px;
+  border: 2px solid #E0DDD5; padding: 20px 24px;
+  min-height: 260px; display: none; flex-direction: column; gap: 14px;
+}
+.panel.active { display: flex; animation: slideIn 0.3s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.panel-title {
+  font-size: 18px; font-weight: bold; color: var(--blue);
+  border-bottom: 2px solid var(--blue-lt); padding-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.panel-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--blue); color: white; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ── ÉTAPE 1 ── */
+.comprends-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.comprends-card { border-radius: 12px; padding: 14px 16px; font-size: 16px; line-height: 1.6; }
+.cc-blue   { background: var(--blue-lt);   border: 2px solid #B5D4F4; color: #185FA5; }
+.cc-amber  { background: var(--amber-lt);  border: 2px solid #FAC775; color: #633806; }
+.cc-green  { background: var(--green-lt);  border: 2px solid #9FE1CB; color: var(--green-dk); }
+.cc-pink   { background: var(--pink-lt);   border: 2px solid #F48FB1; color: #880E4F; }
+.cc-purple { background: var(--purple-lt); border: 2px solid #AFA9EC; color: #3C3489; }
+.comprends-card strong { font-size: 17px; }
+.vocab-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.vocab-tag  { background: var(--amber); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+.vocab-tag.purple { background: var(--purple); }
+
+/* ── ÉTAPE 2 ── */
+.repr-zone { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.repr-total-row { width: 100%; height: 32px; }
+.repr-total-brace {
+  width: 100%; height: 100%;
+  border: 3px solid #333; border-bottom: none;
+  border-radius: 8px 8px 0 0; position: relative;
+}
+.repr-total-q {
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  background: white; padding: 0 8px; font-size: 17px; font-weight: bold; color: #333;
+}
+.barre-2parts {
+  width: 100%; height: 120px;
+  display: flex; border: 3px solid #333;
+  border-radius: 8px; overflow: hidden;
+}
+.barre-part {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; position: relative; background: white;
+}
+.barre-part:first-child { border-right: 3px dashed #4A8DB5; }
+.barre-part-label { font-size: 13px; color: #888; font-style: italic; position: absolute; top: 6px; }
+.barre-part-content {
+  display: flex; gap: 6px; align-items: center;
+  justify-content: center; flex-wrap: wrap; padding: 18px 8px 4px;
+}
+.item-drawn {
+  font-size: 30px; line-height: 1;
+  animation: itemPop 0.32s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes itemPop { 0%{transform:scale(0);opacity:0} 70%{transform:scale(1.3)} 100%{transform:scale(1);opacity:1} }
+.barre-nums { width: 100%; display: flex; }
+.barre-num { flex: 1; text-align: center; font-size: 28px; font-weight: bold; padding: 4px 0; }
+.barre-num.left-s1  { color: var(--coral); }
+.barre-num.right-s1 { color: var(--blue); }
+.barre-num.left-s2  { color: var(--amber); }
+.barre-num.right-s2 { color: var(--pink); }
+.barre-num.left-s3  { color: var(--purple); }
+.barre-num.right-s3 { color: var(--coral); }
+
+.reveal-btns { display: flex; gap: 12px; width: 100%; }
+.btn-reveal {
+  flex: 1; padding: 13px; border-radius: 14px; border: 3px solid;
+  font-size: 16px; font-weight: bold; cursor: pointer;
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-reveal:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-reveal.done-btn { background: var(--green-lt) !important; border-color: var(--green) !important; color: var(--green-dk) !important; }
+
+/* Couleurs par situation */
+.btn-a-s1 { background: var(--coral-lt);  border-color: var(--coral);  color: var(--coral); }
+.btn-b-s1 { background: var(--blue-lt);   border-color: var(--blue);   color: var(--blue); }
+.btn-a-s2 { background: var(--amber-lt);  border-color: var(--amber);  color: #633806; }
+.btn-b-s2 { background: var(--pink-lt);   border-color: var(--pink);   color: var(--pink); }
+.btn-a-s3 { background: var(--purple-lt); border-color: var(--purple); color: #3C3489; }
+.btn-b-s3 { background: var(--coral-lt);  border-color: var(--coral);  color: var(--coral); }
+
+/* ── ÉTAPE 3 ── */
+.calcule-zone { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.calcule-op {
+  font-size: 52px; font-weight: bold; color: #333;
+  display: flex; align-items: center; gap: 16px;
+  opacity: 0; transition: opacity 0.5s;
+}
+.calcule-op.show { opacity: 1; }
+.result-box {
+  background: #333; color: white; padding: 6px 18px;
+  border-radius: 12px; min-width: 60px; text-align: center;
+  opacity: 0; transition: opacity 0.6s;
+}
+.result-box.show { opacity: 1; }
+.btn-calcule {
+  padding: 16px 40px; font-size: 19px; font-weight: bold;
+  border-radius: 16px; border: 3px solid #0F6E56;
+  background: linear-gradient(to bottom, #9FE1CB, #5DCAA5);
+  color: var(--green-dk); cursor: pointer;
+  box-shadow: 0 5px 0 #0A5040; transition: transform 0.08s, box-shadow 0.08s;
+}
+.btn-calcule:active  { transform: translateY(4px); box-shadow: 0 1px 0 #0A5040; }
+.btn-calcule:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.strategies {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  opacity: 0; transition: opacity 0.5s;
+}
+.strategies.show { opacity: 1; }
+.strat-tag {
+  background: var(--amber-lt); border: 2px solid var(--amber);
+  color: #633806; padding: 6px 14px; border-radius: 20px;
+  font-size: 14px; font-weight: bold;
+}
+
+/* ── ÉTAPE 4 ── */
+.reponse-zone { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.reponse-phrase {
+  font-size: 38px; font-weight: bold; font-style: italic;
+  color: #333; text-align: center;
+  opacity: 0; transition: opacity 0.8s; line-height: 1.5;
+}
+.reponse-phrase.show { opacity: 1; }
+.reponse-phrase.s1 { color: var(--coral); }
+.reponse-phrase.s2 { color: var(--amber); }
+.reponse-phrase.s3 { color: var(--purple); }
+
+.btn-reponse {
+  padding: 15px 38px; font-size: 19px; font-weight: bold;
+  border-radius: 16px; cursor: pointer;
+  box-shadow: 0 5px 0; transition: transform 0.08s, box-shadow 0.08s;
+}
+.btn-reponse:active  { transform: translateY(4px); box-shadow: 0 1px 0 !important; }
+.btn-reponse:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none !important; }
+.btn-rep-s1 { background: var(--coral-lt);  border: 3px solid var(--coral);  color: var(--coral); box-shadow: 0 5px 0 #A0401A; }
+.btn-rep-s2 { background: var(--amber-lt);  border: 3px solid var(--amber);  color: #633806;      box-shadow: 0 5px 0 #9A6010; }
+.btn-rep-s3 { background: var(--purple-lt); border: 3px solid var(--purple); color: #3C3489;      box-shadow: 0 5px 0 #3A359A; }
+
+/* ── NAV ROW ── */
+.nav-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: auto; }
+.btn-nav-prev {
+  padding: 11px 22px; font-size: 15px; font-weight: bold;
+  border-radius: 14px; border: 2px solid #D0D0C8; background: white; color: #888; cursor: pointer;
+}
+.btn-nav-prev:hover { background: #F5F5F0; }
+.btn-nav-next {
+  padding: 11px 24px; font-size: 15px; font-weight: bold;
+  border-radius: 14px; border: 3px solid var(--blue);
+  background: var(--blue); color: white; cursor: pointer;
+  box-shadow: 0 4px 0 #2E6A8A; transition: transform 0.08s, box-shadow 0.08s;
+}
+.btn-nav-next:active  { transform: translateY(3px); box-shadow: 0 1px 0 #2E6A8A; }
+.btn-nav-next:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn-nav-end {
+  padding: 11px 24px; font-size: 15px; font-weight: bold;
+  border-radius: 14px; border: 3px solid var(--green);
+  background: var(--green-lt); color: var(--green-dk); cursor: pointer;
+  display: none;
+}
+.btn-nav-end:hover { background: #9FE1CB; }
+
+/* ── FOOTER ── */
+.footer { display: flex; justify-content: space-between; font-size: 11px; color: #bbb; padding-top: 2px; }
+.footer-logo { font-weight: bold; color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="header-title">Je cherche un TOUT - Je dessine</div>
+      <div class="header-sub">Séance 5 — Guidée par l'enseignant — TBI</div>
+    </div>
+    <div class="header-right">
+      <div class="badge badge-sit" id="badge-sit">Situation 1 / 3</div>
+      <div class="badge badge-etape" id="badge-etape">Étape 1 / 4</div>
+    </div>
+  </div>
+
+  <!-- SÉLECTEUR DE SITUATIONS -->
+  <div class="sit-selector">
+    <button class="sit-btn active" id="sit-btn-0" onclick="goToSit(0)">
+      <span class="sit-icon">🦋</span>Les papillons</button>
+    <button class="sit-btn" id="sit-btn-1" onclick="goToSit(1)">
+      <span class="sit-icon">🥐</span>La boulangerie
+    </button>
+    <button class="sit-btn" id="sit-btn-2" onclick="goToSit(2)">
+      <span class="sit-icon">🍭</span>La confiserie
+    </button>
+  </div>
+
+  <!-- ÉTAPES NAV -->
+  <div class="etapes-nav" id="etapes-nav">
+    <!-- généré par JS -->
+  </div>
+
+  <!-- ÉNONCÉ -->
+  <div class="enonce-card" id="enonce-card">
+    <!-- généré par JS -->
+  </div>
+
+  <!-- PANEL 1 -->
+  <div class="panel active" id="panel-1">
+    <div class="panel-title"><div class="panel-num">1</div> Je comprends le problème</div>
+    <div class="comprends-grid" id="grid-comprends"></div>
+    <div class="nav-row">
+      <button class="btn-nav-next" onclick="goToEtape(2)">Étape 2 — Je représente →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2 -->
+  <div class="panel" id="panel-2">
+    <div class="panel-title"><div class="panel-num">2</div> Je représente le problème</div>
+    <div class="repr-zone">
+      <div class="repr-total-row">
+        <div class="repr-total-brace">
+          <span class="repr-total-q" id="repr-q-label">? ... en tout</span>
+        </div>
+      </div>
+      <div class="barre-2parts" id="barre">
+        <div class="barre-part">
+          <div class="barre-part-label" id="lbl-part-a">Partie A</div>
+          <div class="barre-part-content" id="zone-a"></div>
+        </div>
+        <div class="barre-part">
+          <div class="barre-part-label" id="lbl-part-b">Partie B</div>
+          <div class="barre-part-content" id="zone-b"></div>
+        </div>
+      </div>
+      <div class="barre-nums">
+        <div class="barre-num" id="num-a">–</div>
+        <div class="barre-num" id="num-b">–</div>
+      </div>
+      <div class="reveal-btns">
+        <button class="btn-reveal" id="btn-rev-a" onclick="revealPart('a')">…</button>
+        <button class="btn-reveal" id="btn-rev-b" onclick="revealPart('b')" disabled>…</button>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(1)">← Étape 1</button>
+      <button class="btn-nav-next" id="btn-to-3" onclick="goToEtape(3)" disabled>Étape 3 — Je calcule →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3 -->
+  <div class="panel" id="panel-3">
+    <div class="panel-title"><div class="panel-num">3</div> Je calcule</div>
+    <div class="calcule-zone">
+      <div class="calcule-op" id="calcule-op">
+        <span id="calc-phrase" style="font-size:36px; text-align:center; line-height:1.5;"></span>
+      </div>
+      <button class="btn-calcule" id="btn-calcule" onclick="showCalcul()">
+        💡 Afficher
+      </button>
+      <div class="strategies" id="strategies">
+        <!-- généré par JS -->
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(2)">← Étape 2</button>
+      <button class="btn-nav-next" id="btn-to-4" onclick="goToEtape(4)" disabled>Étape 4 — Je réponds →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 4 -->
+  <div class="panel" id="panel-4">
+    <div class="panel-title"><div class="panel-num">4</div> Je réponds</div>
+    <div class="reponse-zone">
+      <button class="btn-reponse" id="btn-reponse" onclick="showReponse()">🌟 Afficher la réponse</button>
+      <div class="reponse-phrase" id="reponse-phrase"></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(3)">← Étape 3</button>
+      <button class="btn-nav-end" id="btn-end" onclick="markSitDone()">✅ Situation terminée →</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>© 2025 Seb'Interactal — Usage classe et IEF uniquement — Outil TBI enseignant</span>
+    <span class="footer-logo">Seb'Interactal</span>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DONNÉES DES 3 SITUATIONS
+═══════════════════════════════════════════════════════ */
+const situations = [
+  {
+    id: 0, cls: 's1',
+    titre: 'Les papillons',
+    enonce: 'Dans le jardin, il y a <strong>5 papillons jaunes</strong> et <strong>3 papillons bleus</strong>.',
+    question: 'Combien y a-t-il de papillons dans le jardin ?',
+    photoIcon: '🦋', photoLabel: 'Illustration<br>à ajouter',
+    qlabel: '? papillons en tout',
+    partA: { label: 'les papillons jaunes',  emoji: '🟡', svgColor: '#F5C518', count: 5, btnCls: 'btn-a-s1', numCls: 'left-s1',  btnTxt: '🦋 Afficher les 5 papillons jaunes' },
+    partB: { label: 'les papillons bleus',  emoji: '🔵', svgColor: '#4A8DB5', count: 3, btnCls: 'btn-b-s1', numCls: 'right-s1', btnTxt: '🦋 Afficher les 3 papillons bleus' },
+    total: 8, motTotal: 'papillons',
+    reponse: 'Il y a 8 papillons<br>dans le jardin.',
+    repBtnCls: 'btn-rep-s1',
+    repPhraseCls: 's1',
+    calcNum1Color: '#D85A30',
+    calcNum2Color: '#4A8DB5',
+    calcPhrase: '5 et encore 3 sont égal à 8',
+    strategies: ['🖐 Comptage sur les doigts', '↗ Surcomptage : 5… 6, ..., 8'],
+    comprends: [
+      { cls:'cc-blue',  title: "Qu'est-ce qu'on sait ?",     content: "Il y a <strong>5 papillons jaunes</strong> et <strong>3 papillons bleus</strong>." },
+      { cls:'cc-amber', title: "Qu'est-ce qu'on cherche ?",   content: "Le nombre total de papillons dans le jardin." },
+      { cls:'cc-green', title: "Un élève réexplique :",       content: "<em>« Il y a deux sortes de papillons. Je cherche combien il y en a en tout. »</em>" },
+      { cls:'cc-pink',  title: "Vocabulaire :",               vocab: ['en tout'] }
+    ]
+  },
+  {
+    id: 1, cls: 's2',
+    titre: 'La boulangerie',
+    enonce: 'Dans la boulangerie, il y a <strong>4 croissants</strong> et <strong>3 donuts</strong>.',
+    question: 'Combien y a-t-il de viennoiseries en tout ?',
+    photoIcon: '🥐', photoLabel: 'Illustration<br>à ajouter',
+    qlabel: '? viennoiseries en tout',
+    partA: { label: 'les croissants', emoji: '🥐', count: 4, btnCls: 'btn-a-s2', numCls: 'left-s2',  btnTxt: '🥐 Afficher les 4 croissants' },
+    partB: { label: 'les donuts',  emoji: '🍩', count: 3, btnCls: 'btn-b-s2', numCls: 'right-s2', btnTxt: '🍩 Afficher les 3 donuts' },
+    total: 7, motTotal: 'viennoiseries',
+    reponse: 'Il y a 7 viennoiseries<br>dans la boulangerie.',
+    repBtnCls: 'btn-rep-s2',
+    repPhraseCls: 's2',
+    calcNum1Color: '#EF9F27',
+    calcNum2Color: '#E91E8C',
+    calcPhrase: '4 et encore 3 sont égal à 7',
+    strategies: ['🖐 Comptage sur les doigts', '↗ Surcomptage : 4… 5, 6, 7'],
+    comprends: [
+      { cls:'cc-blue',  title: "Qu'est-ce qu'on sait ?",     content: "Il y a <strong>4 croissants</strong> et <strong>3 donuts</strong>." },
+      { cls:'cc-amber', title: "Qu'est-ce qu'on cherche ?",   content: "Le nombre total de viennoiseries dans la boulangerie." },
+      { cls:'cc-green', title: "Un élève réexplique :",       content: "<em>« Il y a deux sortes de viennoiseries. Je dois trouver combien il y en a en tout. »</em>" },
+      { cls:'cc-pink',  title: "Vocabulaire :",               vocab: ['viennoiseries','donut'] }
+    ]
+  },
+  {
+    id: 2, cls: 's3',
+    titre: 'La confiserie',
+    enonce: 'Dans le sachet, il y a <strong>5 sucettes</strong> et <strong>4 bonbons</strong>.',
+    question: 'Combien y a-t-il de sucreries en tout ?',
+    photoIcon: '🍭', photoLabel: 'Illustration<br>à ajouter',
+    qlabel: '? sucreries en tout',
+    partA: { label: 'les sucettes',  emoji: '🍭', count: 5, btnCls: 'btn-a-s3', numCls: 'left-s3',  btnTxt: '🍭 Afficher les 5 sucettes' },
+    partB: { label: 'les bonbons', emoji: '🍬', count: 4, btnCls: 'btn-b-s3', numCls: 'right-s3', btnTxt: '🍬 Afficher les 4 bonbons' },
+    total: 9, motTotal: 'sucreries',
+    reponse: 'Il y a 9 sucreries<br>dans le sachet.',
+    repBtnCls: 'btn-rep-s3',
+    repPhraseCls: 's3',
+    calcNum1Color: '#7F77DD',
+    calcNum2Color: '#D85A30',
+    calcPhrase: '5 et encore 4 sont égal à 9',
+    strategies: ['🖐 Comptage sur les doigts', '↗ Surcomptage : 5… 6, 7, 8, 9'],
+    comprends: [
+      { cls:'cc-blue',   title: "Qu'est-ce qu'on sait ?",     content: "Il y a <strong>5 sucettes</strong> et <strong>4 bonbons</strong>." },
+      { cls:'cc-amber',  title: "Qu'est-ce qu'on cherche ?",   content: "Le nombre total de sucreries dans le sachet." },
+      { cls:'cc-green',  title: "Un élève réexplique :",       content: "<em>« Il y a deux sortes de sucreries. Je dois trouver combien il y en a en tout. »</em>" },
+      { cls:'cc-purple', title: "Vocabulaire :",               vocab: ['confiserie','sucrerie'] }
+    ]
+  }
+];
+
+/* ── STATE ── */
+let currentSit   = 0;
+let currentEtape = 1;
+let stateA       = false; // partie A révélée
+let stateB       = false; // partie B révélée
+let calculShown  = false;
+let reponseShown = false;
+let doneSits     = [false, false, false];
+
+/* ══════════════════════════════
+   RENDU DE LA SITUATION COURANTE
+══════════════════════════════ */
+function renderSit() {
+  const s = situations[currentSit];
+
+  // Sit selector
+  situations.forEach((_, i) => {
+    const b = document.getElementById('sit-btn-' + i);
+    b.classList.remove('active', 'done');
+    if (i === currentSit) b.classList.add('active');
+    else if (doneSits[i]) b.classList.add('done');
+  });
+
+  // Badge
+  document.getElementById('badge-sit').textContent  = 'Situation ' + (currentSit+1) + ' / 3';
+
+  // Énoncé
+  const ec = document.getElementById('enonce-card');
+  ec.className = 'enonce-card ' + s.cls;
+  ec.innerHTML = `
+    <div class="enonce-text">
+      ${s.enonce}
+      <span class="question">${s.question}</span>
+    </div>
+    <div class="enonce-photo">
+      <span class="ph-icon">${s.photoIcon}</span>
+      
+    </div>`;
+
+  // Comprendre grid
+  const grid = document.getElementById('grid-comprends');
+  grid.innerHTML = s.comprends.map(c => {
+    const content = c.vocab
+      ? `<div class="vocab-list">${c.vocab.map(v =>
+          `<span class="vocab-tag${s.cls==='s3'?' purple':''}">${v}</span>`
+        ).join('')}</div>`
+      : c.content;
+    return `<div class="comprends-card ${c.cls}">
+      <strong>${c.title}</strong><br>${content}
+    </div>`;
+  }).join('');
+
+  // Étapes nav
+  renderEtapesNav();
+
+  // Barre step 2
+  document.getElementById('repr-q-label').textContent = s.qlabel;
+  document.getElementById('lbl-part-a').textContent  = s.partA.label;
+  document.getElementById('lbl-part-b').textContent  = s.partB.label;
+  document.getElementById('zone-a').innerHTML = '';
+  document.getElementById('zone-b').innerHTML = '';
+  document.getElementById('num-a').textContent = '–';
+  document.getElementById('num-b').textContent = '–';
+  document.getElementById('num-a').className = 'barre-num ' + s.partA.numCls;
+  document.getElementById('num-b').className = 'barre-num ' + s.partB.numCls;
+
+  const btnA = document.getElementById('btn-rev-a');
+  btnA.textContent = s.partA.btnTxt;
+  btnA.className = 'btn-reveal ' + s.partA.btnCls;
+  btnA.disabled = false;
+  const btnB = document.getElementById('btn-rev-b');
+  btnB.textContent = s.partB.btnTxt;
+  btnB.className = 'btn-reveal ' + s.partB.btnCls;
+  btnB.disabled = true;
+
+  document.getElementById('btn-to-3').disabled = true;
+
+  // Calcul step 3
+  const op = document.getElementById('calcule-op');
+  op.classList.remove('show');
+  const phrase = document.getElementById('calc-phrase');
+  phrase.style.color = s.calcNum1Color;
+  phrase.textContent = s.calcPhrase;
+  document.getElementById('btn-calcule').disabled = false;
+  document.getElementById('btn-calcule').textContent = '💡 Afficher';
+  const strats = document.getElementById('strategies');
+  strats.innerHTML = s.strategies.map(t => `<span class="strat-tag">${t}</span>`).join('');
+  strats.classList.remove('show');
+  document.getElementById('btn-to-4').disabled = true;
+
+  // Réponse step 4
+  const rp = document.getElementById('reponse-phrase');
+  rp.innerHTML = s.reponse;
+  rp.classList.remove('show');
+  rp.className = 'reponse-phrase ' + s.repPhraseCls;
+  const br = document.getElementById('btn-reponse');
+  br.disabled = false; br.textContent = '🌟 Afficher la réponse';
+  br.className = 'btn-reponse ' + s.repBtnCls;
+  document.getElementById('btn-end').style.display = 'none';
+
+  // Reset state
+  stateA = false; stateB = false; calculShown = false; reponseShown = false;
+}
+
+function renderEtapesNav() {
+  const nav = document.getElementById('etapes-nav');
+  const labels = ['Je comprends','Je représente','Je calcule','Je réponds'];
+  nav.innerHTML = labels.map((lbl, i) => {
+    const n = i + 1;
+    let cls = 'etape-btn';
+    if (n === currentEtape) cls += ' active';
+    else if (n < currentEtape) cls += ' done';
+    return `<button class="${cls}" id="btn-e${n}" onclick="goToEtape(${n})">
+      <div class="etape-num-circle">${n < currentEtape ? '✓' : n}</div><br>${lbl}
+    </button>`;
+  }).join('');
+}
+
+/* ── NAVIGATION ── */
+function goToSit(i) {
+  currentSit = i; currentEtape = 1;
+  renderSit();
+  showPanel(1);
+}
+
+function goToEtape(n) {
+  currentEtape = n;
+  document.getElementById('badge-etape').textContent = 'Étape ' + n + ' / 4';
+  renderEtapesNav();
+  showPanel(n);
+}
+
+function showPanel(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('panel-' + i).classList.remove('active');
+  });
+  document.getElementById('panel-' + n).classList.add('active');
+}
+
+/* ── RÉVÉLATION BARRE ── */
+function revealPart(part) {
+  const s = situations[currentSit];
+  const info = part === 'a' ? s.partA : s.partB;
+  const zoneId = 'zone-' + part;
+  const numId  = 'num-' + part;
+  const btnId  = 'btn-rev-' + part;
+  const zone   = document.getElementById(zoneId);
+
+  zone.innerHTML = '';
+  for (let i = 0; i < info.count; i++) {
+    setTimeout(() => {
+      const span = document.createElement('span');
+      span.className = 'item-drawn';
+      if (info.svgColor) {
+        const c = info.svgColor;
+        span.innerHTML = `<svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="30" cy="35" rx="28" ry="18" fill="${c}" opacity="0.9" transform="rotate(-30 30 35)"/>
+          <ellipse cx="70" cy="35" rx="28" ry="18" fill="${c}" opacity="0.9" transform="rotate(30 70 35)"/>
+          <ellipse cx="28" cy="65" rx="20" ry="14" fill="${c}" opacity="0.75" transform="rotate(20 28 65)"/>
+          <ellipse cx="72" cy="65" rx="20" ry="14" fill="${c}" opacity="0.75" transform="rotate(-20 72 65)"/>
+          <ellipse cx="50" cy="50" rx="5" ry="22" fill="#333"/>
+          <circle cx="50" cy="28" r="5" fill="#333"/>
+          <line x1="50" y1="23" x2="38" y2="10" stroke="#333" stroke-width="2"/>
+          <line x1="50" y1="23" x2="62" y2="10" stroke="#333" stroke-width="2"/>
+        </svg>`;
+      } else {
+        span.textContent = info.emoji;
+      }
+      zone.appendChild(span);
+    }, i * 180);
+  }
+
+  setTimeout(() => {
+    document.getElementById(numId).textContent = info.count;
+    const btn = document.getElementById(btnId);
+    btn.classList.add('done-btn');
+    const btnEmoji = info.svgColor ? '🦋' : info.emoji;
+    btn.textContent = btnEmoji + ' ' + info.count + ' ' + info.label.replace('les ','') + ' ✓';
+    btn.disabled = true;
+
+    if (part === 'a') {
+      stateA = true;
+      document.getElementById('btn-rev-b').disabled = false;
+    } else {
+      stateB = true;
+      document.getElementById('btn-to-3').disabled = false;
+    }
+  }, info.count * 180 + 200);
+}
+
+/* ── CALCUL ── */
+function showCalcul() {
+  if (calculShown) return;
+  calculShown = true;
+  document.getElementById('calcule-op').classList.add('show');
+  document.getElementById('btn-calcule').disabled = true;
+  document.getElementById('btn-calcule').textContent = '✓ Affiché';
+  setTimeout(() => {
+    document.getElementById('strategies').classList.add('show');
+    document.getElementById('btn-to-4').disabled = false;
+  }, 700);
+}
+
+/* ── RÉPONSE ── */
+function showReponse() {
+  if (reponseShown) return;
+  reponseShown = true;
+  document.getElementById('reponse-phrase').classList.add('show');
+  document.getElementById('btn-reponse').disabled = true;
+  document.getElementById('btn-reponse').textContent = '✓ Réponse affichée';
+  setTimeout(() => {
+    document.getElementById('btn-end').style.display = 'inline-block';
+  }, 700);
+}
+
+/* ── FIN DE SITUATION ── */
+function markSitDone() {
+  doneSits[currentSit] = true;
+  document.getElementById('sit-btn-' + currentSit).classList.remove('active');
+  document.getElementById('sit-btn-' + currentSit).classList.add('done');
+  const next = currentSit + 1;
+  if (next < situations.length) {
+    goToSit(next);
+  } else {
+    // Toutes terminées
+    document.getElementById('sit-btn-' + currentSit).classList.add('done');
+    alert('🎉 Les 3 situations sont terminées ! Bravo à la classe !');
+  }
+}
+
+// Init
+renderSit();
+showPanel(1);
+</script>
+</body>
+</html>
