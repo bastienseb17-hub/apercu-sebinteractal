@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Séance 34 — Je cherche un tout — J'utilise des bandes | Seb'Interactal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --green:#5DCAA5;--green-lt:#EAF3DE;--green-dk:#085041;
+  --amber:#EF9F27;--amber-lt:#FFF9E6;
+  --blue:#4A8DB5;--blue-lt:#E6F1FB;
+  --coral:#D85A30;--coral-lt:#FAECE7;
+  --purple:#7F77DD;--purple-lt:#EEEDFE;
+  --pink:#E91E8C;--pink-lt:#FCE4F3;
+}
+body{font-family:Arial,sans-serif;background:#F8F6F0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:14px;}
+.app{width:100%;max-width:960px;display:flex;flex-direction:column;gap:12px;}
+
+/* ── HEADER ── */
+.header{background:#2E6A4A;border-radius:16px;padding:13px 22px;display:flex;justify-content:space-between;align-items:center;}
+.header-title{color:white;font-size:22px;font-weight:bold;}
+.header-sub{color:#9FE1CB;font-size:13px;margin-top:2px;}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.badge{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:bold;white-space:nowrap;}
+.badge-etape{background:#FAC775;color:#633806;}
+.badge-sit{background:rgba(255,255,255,0.2);color:white;}
+
+/* ── SIT SELECTOR ── */
+.sit-selector{display:flex;gap:8px;}
+.sit-btn{flex:1;padding:11px 8px;border-radius:14px;border:2.5px solid #D0D0C8;background:white;font-size:14px;font-weight:bold;color:#999;cursor:pointer;text-align:center;transition:all 0.2s;line-height:1.4;}
+.sit-btn .sit-icon{font-size:22px;display:block;margin-bottom:3px;}
+.sit-btn.active{border-color:#2E6A4A;background:#2E6A4A;color:white;}
+.sit-btn.done{border-color:var(--green);background:var(--green-lt);color:var(--green-dk);}
+
+/* ── ETAPES NAV ── */
+.etapes-nav{display:flex;gap:8px;}
+.etape-btn{flex:1;padding:9px 6px;border-radius:12px;border:2px solid #D0D0C8;background:white;font-size:13px;font-weight:bold;color:#999;cursor:pointer;text-align:center;transition:all 0.2s;line-height:1.3;}
+.etape-btn.active{border-color:#2E6A4A;background:#2E6A4A;color:white;}
+.etape-btn.done{border-color:var(--green);background:var(--green-lt);color:var(--green-dk);}
+.etape-num-circle{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:11px;margin-bottom:2px;background:rgba(255,255,255,0.3);}
+
+/* ── ENONCE ── */
+.enonce-card{border:2.5px solid var(--amber);border-radius:16px;padding:14px 18px;display:flex;gap:16px;align-items:center;}
+.enonce-card.s1{background:#FFF9E6;}.enonce-card.s2{background:#FFF0F5;}.enonce-card.s3{background:var(--purple-lt);border-color:var(--purple);}
+.enonce-text{flex:1;font-size:21px;color:#333;line-height:1.7;}
+.enonce-text .question{font-size:19px;font-weight:bold;color:#222;display:block;margin-top:6px;}
+.enonce-photo{width:120px;height:90px;border:2px dashed #CCC;border-radius:12px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ph-icon{font-size:54px;line-height:1;}
+
+/* ── PANEL ── */
+.panel{background:white;border-radius:16px;border:2px solid #E0DDD5;padding:20px 24px;min-height:280px;display:none;flex-direction:column;gap:14px;}
+.panel.active{display:flex;animation:slideIn 0.3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.panel-title{font-size:18px;font-weight:bold;color:#2E6A4A;border-bottom:2px solid var(--green-lt);padding-bottom:8px;display:flex;align-items:center;gap:10px;}
+.panel-num{width:32px;height:32px;border-radius:50%;background:#2E6A4A;color:white;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── COMPRENDS ── */
+.comprends-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.comprends-card{border-radius:12px;padding:14px 16px;font-size:16px;line-height:1.6;}
+.cc-blue{background:var(--blue-lt);border:2px solid #B5D4F4;color:#185FA5;}
+.cc-amber{background:var(--amber-lt);border:2px solid #FAC775;color:#633806;}
+.cc-green{background:var(--green-lt);border:2px solid #9FE1CB;color:var(--green-dk);}
+.cc-pink{background:var(--pink-lt);border:2px solid #F48FB1;color:#880E4F;}
+.cc-purple{background:var(--purple-lt);border:2px solid #AFA9EC;color:#3C3489;}
+.comprends-card strong{font-size:17px;}
+.vocab-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.vocab-tag{background:#2E6A4A;color:white;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:bold;}
+
+/* ══════════════════════════════
+   REPR — BANDES (sans cases)
+══════════════════════════════ */
+.repr-zone{display:flex;flex-direction:column;gap:14px;width:100%;}
+
+.consigne{background:#E8F5E9;border:2px solid #81C784;border-radius:12px;padding:12px 18px;font-size:17px;color:#2E6A4A;line-height:1.6;min-height:52px;opacity:0;transition:opacity 0.4s;}
+.consigne.show{opacity:1;}
+
+/* Schéma global */
+.schema{display:flex;flex-direction:column;gap:0;align-items:flex-start;width:100%;opacity:0;transition:opacity 0.5s;}
+.schema.show{opacity:1;}
+
+/* ── BARRE DU TOUT (en haut, blanche avec ?) ── */
+.bande-tout-wrap{
+  width:100%;
+  display:flex; flex-direction:column; align-items:stretch;
+  margin-bottom:0;
+  opacity:0; transition:opacity 0.5s;
+}
+.bande-tout-wrap.show{opacity:1;}
+.bande-tout-lbl-row{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
+.bande-tout-lbl{font-size:15px;font-weight:bold;color:#333;}
+.bande-tout{
+  height:56px;
+  border:3px solid #888;
+  border-radius:6px;
+  background:white;
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.tout-q{font-size:38px;font-weight:900;color:#999;transition:opacity 0.4s;}
+.tout-q.hide{opacity:0;}
+.tout-val{font-size:38px;font-weight:900;color:#2E6A4A;position:absolute;opacity:0;transition:opacity 0.5s;}
+.tout-val.show{opacity:1;}
+
+/* ── PARTIES ROW (en bas) ── */
+.parties-row{display:flex;gap:0;align-items:flex-start;width:100%;}
+
+/* Groupe d'une partie : bande + label centré dessous */
+.bande-groupe{
+  display:flex; flex-direction:column; align-items:center;
+  opacity:0; transform:translateY(8px);
+  transition:opacity 0.4s, transform 0.4s;
+}
+.bande-groupe.show{opacity:1; transform:translateY(0);}
+
+/* La bande elle-même — pleine, sans cases visibles */
+.bande{
+  height:52px;
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+  /* arrondi seulement sur les côtés extérieurs, géré via JS */
+}
+.bande-num{
+  font-size:34px; font-weight:900;
+  color:white;
+  text-shadow:0 1px 3px rgba(0,0,0,0.25);
+  opacity:0; transition:opacity 0.5s;
+  user-select:none;
+}
+.bande-num.show{opacity:1;}
+
+.bande-lbl{
+  font-size:13px; font-weight:bold; color:#444;
+  margin-top:5px;
+  text-align:center;
+  max-width:200px;
+  line-height:1.3;
+}
+
+/* Boutons repr */
+.repr-btns{display:flex;gap:10px;width:100%;flex-wrap:wrap;}
+.btn-repr{flex:1;padding:13px;border-radius:14px;border:3px solid;font-size:15px;font-weight:bold;cursor:pointer;transition:all 0.15s;text-align:center;min-width:120px;}
+.btn-repr:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-repr.done-btn{background:var(--green-lt)!important;border-color:var(--green)!important;color:var(--green-dk)!important;}
+.btn-a{background:var(--blue-lt);border-color:var(--blue);color:#185FA5;}
+.btn-b{background:var(--coral-lt);border-color:var(--coral);color:var(--coral);}
+.btn-assemble{background:var(--green-lt);border-color:#2E6A4A;color:#2E6A4A;box-shadow:0 4px 0 #1A4A2E;transition:transform 0.08s,box-shadow 0.08s;}
+.btn-assemble:active{transform:translateY(3px);box-shadow:0 1px 0 #1A4A2E;}
+
+/* ── CALCUL ── */
+.calcule-zone{display:flex;flex-direction:column;gap:16px;align-items:center;}
+.calcule-op{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;opacity:0;transition:opacity 0.5s;}
+.calcule-op.show{opacity:1;}
+.calc-num{font-size:56px;font-weight:900;}
+.calc-sym{font-size:48px;font-weight:900;color:#555;}
+.calc-result{font-size:56px;font-weight:900;background:#2E6A4A;color:white;padding:6px 22px;border-radius:16px;opacity:0;transition:opacity 0.6s 0.3s;}
+.calc-result.show{opacity:1;}
+.btn-calcule{padding:16px 40px;font-size:19px;font-weight:bold;border-radius:16px;border:3px solid #0F6E56;background:linear-gradient(to bottom,#9FE1CB,#5DCAA5);color:var(--green-dk);cursor:pointer;box-shadow:0 5px 0 #0A5040;transition:transform 0.08s,box-shadow 0.08s;}
+.btn-calcule:active{transform:translateY(4px);box-shadow:0 1px 0 #0A5040;}
+.btn-calcule:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+
+/* ── RÉPONSE ── */
+.reponse-zone{display:flex;flex-direction:column;gap:16px;align-items:center;}
+.btn-reponse{padding:15px 38px;font-size:19px;font-weight:bold;border-radius:16px;cursor:pointer;border:3px solid #2E6A4A;background:var(--green-lt);color:#2E6A4A;box-shadow:0 5px 0 #1A4A2E;transition:transform 0.08s,box-shadow 0.08s;}
+.btn-reponse:active{transform:translateY(4px);box-shadow:0 1px 0 #1A4A2E;}
+.btn-reponse:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+.reponse-banner{opacity:0;transition:opacity 0.8s;}
+.reponse-banner.show{opacity:1;}
+.reponse-inner{background:linear-gradient(135deg,#E91E8C,#C2185B);border-radius:18px;padding:18px 32px;font-size:34px;font-style:italic;color:white;text-align:center;line-height:1.6;font-family:Georgia,'Times New Roman',serif;letter-spacing:0.5px;box-shadow:0 6px 20px rgba(233,30,140,0.35);}
+
+/* ── NAV ── */
+.nav-row{display:flex;gap:10px;justify-content:flex-end;margin-top:auto;}
+.btn-nav-prev{padding:11px 22px;font-size:15px;font-weight:bold;border-radius:14px;border:2px solid #D0D0C8;background:white;color:#888;cursor:pointer;}
+.btn-nav-next{padding:11px 24px;font-size:15px;font-weight:bold;border-radius:14px;border:3px solid #2E6A4A;background:#2E6A4A;color:white;cursor:pointer;box-shadow:0 4px 0 #1A4A2E;transition:transform 0.08s,box-shadow 0.08s;}
+.btn-nav-next:active{transform:translateY(3px);box-shadow:0 1px 0 #1A4A2E;}
+.btn-nav-next:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+.btn-nav-end{padding:11px 24px;font-size:15px;font-weight:bold;border-radius:14px;border:3px solid var(--green);background:var(--green-lt);color:var(--green-dk);cursor:pointer;display:none;}
+.footer{display:flex;justify-content:space-between;font-size:11px;color:#bbb;padding-top:2px;}
+.footer-logo{font-weight:bold;color:#2E6A4A;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="header-title">Je cherche un tout (je réunis 2 collections) — J'utilise des bandes</div>
+      <div class="header-sub">Séance 34 — Guidée par l'enseignant — TBI</div>
+    </div>
+    <div class="header-right">
+      <div class="badge badge-sit" id="badge-sit">Situation 1 / 3</div>
+      <div class="badge badge-etape" id="badge-etape">Étape 1 / 4</div>
+    </div>
+  </div>
+
+  <div class="sit-selector">
+    <button class="sit-btn active" id="sit-btn-0" onclick="goToSit(0)"><span class="sit-icon">🦋</span>Le jardin</button>
+    <button class="sit-btn"        id="sit-btn-1" onclick="goToSit(1)"><span class="sit-icon">🦜</span>Les perroquets</button>
+    <button class="sit-btn"        id="sit-btn-2" onclick="goToSit(2)"><span class="sit-icon">🍎</span>Les pommes</button>
+  </div>
+
+  <div class="etapes-nav" id="etapes-nav"></div>
+  <div class="enonce-card" id="enonce-card"></div>
+
+  <!-- PANEL 1 -->
+  <div class="panel active" id="panel-1">
+    <div class="panel-title"><div class="panel-num">1</div> Je comprends le problème</div>
+    <div class="comprends-grid" id="grid-comprends"></div>
+    <div class="nav-row">
+      <button class="btn-nav-next" onclick="goToEtape(2)">Étape 2 — Je représente →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2 -->
+  <div class="panel" id="panel-2">
+    <div class="panel-title"><div class="panel-num">2</div> Je représente — J'utilise des bandes</div>
+    <div class="repr-zone">
+      <div class="consigne" id="consigne"></div>
+
+      <div class="schema" id="schema">
+
+        <!-- BARRE DU TOUT (en haut) -->
+        <div class="bande-tout-wrap" id="bande-tout-wrap">
+          <div class="bande-tout-lbl-row">
+            <span class="bande-tout-lbl" id="tout-lbl"></span>
+          </div>
+          <div class="bande-tout" id="bande-tout">
+            <span class="tout-q" id="tout-q">?</span>
+            <span class="tout-val" id="tout-val"></span>
+          </div>
+        </div>
+
+        <!-- PARTIES (dessous, collées) -->
+        <div class="parties-row" id="parties-row">
+          <!-- Partie A -->
+          <div class="bande-groupe" id="wrap-a">
+            <div class="bande" id="bande-a">
+              <span class="bande-num" id="num-a"></span>
+            </div>
+            <div class="bande-lbl" id="lbl-a"></div>
+          </div>
+          <!-- Partie B -->
+          <div class="bande-groupe" id="wrap-b">
+            <div class="bande" id="bande-b">
+              <span class="bande-num" id="num-b"></span>
+            </div>
+            <div class="bande-lbl" id="lbl-b"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="repr-btns">
+      <button class="btn-repr btn-a" id="btn-rev-a" onclick="revealA()">…</button>
+      <button class="btn-repr btn-b" id="btn-rev-b" onclick="revealB()" disabled>…</button>
+      <button class="btn-repr btn-assemble" id="btn-assemble" onclick="assembler()" disabled>🔗 Assembler — trouver le tout</button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(1)">← Étape 1</button>
+      <button class="btn-nav-next" id="btn-to-3" onclick="goToEtape(3)" disabled>Étape 3 — Je calcule →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3 -->
+  <div class="panel" id="panel-3">
+    <div class="panel-title"><div class="panel-num">3</div> Je calcule</div>
+    <div class="calcule-zone">
+      <div class="calcule-op" id="calcule-op">
+        <span class="calc-num" id="calc-n1"></span>
+        <span class="calc-sym">+</span>
+        <span class="calc-num" id="calc-n2"></span>
+        <span class="calc-sym">=</span>
+        <span class="calc-result" id="calc-res"></span>
+      </div>
+      <button class="btn-calcule" id="btn-calcule" onclick="showCalcul()">💡 Afficher</button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(2)">← Étape 2</button>
+      <button class="btn-nav-next" id="btn-to-4" onclick="goToEtape(4)" disabled>Étape 4 — Je réponds →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 4 -->
+  <div class="panel" id="panel-4">
+    <div class="panel-title"><div class="panel-num">4</div> Je réponds</div>
+    <div class="reponse-zone">
+      <button class="btn-reponse" id="btn-reponse" onclick="showReponse()">🌟 Afficher la réponse</button>
+      <div class="reponse-banner" id="reponse-banner">
+        <div class="reponse-inner" id="reponse-inner"></div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(3)">← Étape 3</button>
+      <button class="btn-nav-end" id="btn-end" onclick="markSitDone()">✅ Situation terminée →</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>© 2026 Seb'Interactal — Usage classe et IEF uniquement — Outil TBI enseignant</span>
+    <span class="footer-logo">Seb'Interactal</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  Largeur de référence par unité (px)
+//  Toutes les bandes sont proportionnelles.
+//  MAX_W = largeur totale disponible (environ 860px pour max-width:960px avec padding)
+// ═══════════════════════════════════════════════════
+const MAX_W = 860; // largeur max du schéma en px
+
+// ─── SITUATIONS ───
+// Situation 0 : 19 + 4 = 23   (crocodiles)
+// Situation 1 : 18 + 7 = 25   (perroquets)
+// Situation 2 : 16 + 9 = 25   (pommes — variante pour les 25)
+const situations = [
+
+  /* ── SIT 0 : papillons — total 23 ── */
+  {
+    id:0, cls:'s1',
+    titre: 'Le jardin',
+    enonce: 'Dans le jardin, il y a <strong>14 papillons jaunes</strong> et <strong>9 papillons bleus</strong>.',
+    question: 'Combien y a-t-il de papillons en tout ?',
+    photoIcon: '🦋',
+    partA:{ label:'Les papillons jaunes', icon:'🟨', count:14, color:'#D85A30', shadow:'#A03010' },
+    partB:{ label:'Les papillons bleus', icon:'🟦', count:9, color:'#5DCAA5', shadow:'#0A5040' },
+    motTotal:'papillons', total:23,
+    reponse:"Il y a 23 papillons en tout dans le jardin.",
+    comprends:[
+      {cls:'cc-blue',  title:"Qu'est-ce qu'on sait ?",   content:"Il y a <strong>14 papillons jaunes</strong> et <strong>9 papillons bleus</strong>."},
+      {cls:'cc-amber', title:"Qu'est-ce qu'on cherche ?", content:"Le nombre total de papillons dans le jardin."},
+      {cls:'cc-green', title:"Un élève réexplique :",     content:"<em>« Il y a deux sortes de papillons. Je cherche combien il y en a en tout. »</em>"},
+      {cls:'cc-pink',  title:"Vocabulaire :",             vocab:['']}
+    ]},
+
+  /* ── SIT 1 : Perroquets — total 25 ── */
+  {
+    id:1, cls:'s2', titre:'Les perroquets', photoIcon:'🦜',
+    enonce:"Dans l'arbre, il y a <strong>18 perroquets</strong>. Sur le sol, il y a <strong>7 perroquets</strong>.",
+    question:'Combien y a-t-il de perroquets en tout ?',
+    partA:{ label:'perroquets dans l\'arbre', count:18, color:'#4A8DB5' },
+    partB:{ label:'perroquets sur le sol',    count:7,  color:'#EF9F27' },
+    motTotal:'perroquets', total:25,
+    reponse:'Il y a 25 perroquets en tout.',
+    comprends:[
+      {cls:'cc-blue',  title:"Qu'est-ce qu'on sait ?",   content:"Il y a <strong>18 perroquets</strong> dans l'arbre et <strong>7</strong> sur le sol."},
+      {cls:'cc-amber', title:"Qu'est-ce qu'on cherche ?", content:"Le nombre total de perroquets."},
+      {cls:'cc-green', title:"Un élève réexplique :",     content:"<em>« Deux groupes de perroquets. Je cherche combien il y en a en tout. »</em>"},
+      {cls:'cc-pink',  title:"Vocabulaire :",             vocab:['perroquet']}
+    ]
+  },
+
+  /* ── SIT 2 : Pommes — total 25 ── */
+  {
+    id:2, cls:'s3', titre:'Les pommes', photoIcon:'🍎',
+    enonce:"Dans le panier, il y a <strong>16 pommes rouges</strong>. Il y a aussi <strong>9 pommes vertes</strong>.",
+    question:'Combien y a-t-il de pommes en tout dans le panier ?',
+    partA:{ label:'pommes rouges', count:16, color:'#D85A30' },
+    partB:{ label:'pommes vertes', count:9,  color:'#2E6A4A' },
+    motTotal:'pommes', total:25,
+    reponse:'Il y a 25 pommes en tout dans le panier.',
+    comprends:[
+      {cls:'cc-blue',   title:"Qu'est-ce qu'on sait ?",   content:"Il y a <strong>16 pommes rouges</strong> et <strong>9 pommes vertes</strong> dans le panier."},
+      {cls:'cc-amber',  title:"Qu'est-ce qu'on cherche ?", content:"Le nombre total de pommes."},
+      {cls:'cc-green',  title:"Un élève réexplique :",     content:"<em>« Deux sortes de pommes. Je cherche le total. »</em>"},
+      {cls:'cc-purple', title:"Vocabulaire :",             vocab:['panier']}
+    ]
+  }
+];
+
+// ─── STATE ───
+let currentSit=0, currentEtape=1;
+let stateA=false, stateB=false, assembled=false, calculShown=false, reponseShown=false;
+let doneSits=[false,false,false];
+
+// ─── CALCUL DES LARGEURS PROPORTIONNELLES ───
+function getWidths(s) {
+  const total = s.total;
+  const cA = s.partA.count;
+  const cB = s.partB.count;
+  // Largeur proportionnelle : chaque unité = MAX_W / total
+  const unit = MAX_W / total;
+  return {
+    wA: Math.round(cA * unit),
+    wB: Math.round(cB * unit),
+    wTot: MAX_W
+  };
+}
+
+// ─── RENDER SIT ───
+function renderSit(){
+  const s=situations[currentSit];
+  stateA=false; stateB=false; assembled=false; calculShown=false; reponseShown=false;
+
+  situations.forEach((_,i)=>{
+    const b=document.getElementById('sit-btn-'+i);
+    b.classList.remove('active','done');
+    if(i===currentSit) b.classList.add('active');
+    else if(doneSits[i]) b.classList.add('done');
+  });
+  document.getElementById('badge-sit').textContent='Situation '+(currentSit+1)+' / 3';
+
+  // Énoncé
+  const ec=document.getElementById('enonce-card'); ec.className='enonce-card '+s.cls;
+  ec.innerHTML=`<div class="enonce-text">${s.enonce}<span class="question">${s.question}</span></div><div class="enonce-photo"><span class="ph-icon">${s.photoIcon}</span></div>`;
+
+  // Comprends
+  document.getElementById('grid-comprends').innerHTML=s.comprends.map(c=>{
+    const ct=c.vocab?`<div class="vocab-list">${c.vocab.map(v=>`<span class="vocab-tag">${v}</span>`).join('')}</div>`:c.content;
+    return `<div class="comprends-card ${c.cls}"><strong>${c.title}</strong><br>${ct}</div>`;
+  }).join('');
+
+  renderEtapesNav();
+
+  // Reset consigne
+  const csg=document.getElementById('consigne');
+  csg.classList.remove('show'); csg.innerHTML='';
+
+  // Reset schéma
+  document.getElementById('schema').classList.remove('show');
+
+  // Reset bande tout
+  document.getElementById('bande-tout-wrap').classList.remove('show');
+  document.getElementById('tout-lbl').textContent='';
+  document.getElementById('tout-q').classList.remove('hide');
+  document.getElementById('tout-val').textContent=s.total;
+  document.getElementById('tout-val').classList.remove('show');
+  document.getElementById('bande-tout').style.width='';
+
+  // Reset partie A
+  document.getElementById('wrap-a').classList.remove('show');
+  document.getElementById('bande-a').style.width='';
+  document.getElementById('bande-a').style.background='';
+  document.getElementById('bande-a').style.borderRadius='';
+  document.getElementById('num-a').textContent='';
+  document.getElementById('num-a').classList.remove('show');
+  document.getElementById('lbl-a').textContent='';
+
+  // Reset partie B
+  document.getElementById('wrap-b').classList.remove('show');
+  document.getElementById('bande-b').style.width='';
+  document.getElementById('bande-b').style.background='';
+  document.getElementById('bande-b').style.borderRadius='';
+  document.getElementById('num-b').textContent='';
+  document.getElementById('num-b').classList.remove('show');
+  document.getElementById('lbl-b').textContent='';
+
+  // Boutons
+  const bA=document.getElementById('btn-rev-a');
+  bA.textContent=s.photoIcon+' '+s.partA.label.charAt(0).toUpperCase()+s.partA.label.slice(1);
+  bA.className='btn-repr btn-a'; bA.disabled=false; bA.classList.remove('done-btn');
+
+  const bB=document.getElementById('btn-rev-b');
+  bB.textContent=s.photoIcon+' '+s.partB.label.charAt(0).toUpperCase()+s.partB.label.slice(1);
+  bB.className='btn-repr btn-b'; bB.disabled=true; bB.classList.remove('done-btn');
+
+  const bAs=document.getElementById('btn-assemble');
+  bAs.textContent='🔗 Assembler — trouver le tout'; bAs.disabled=true; bAs.classList.remove('done-btn');
+
+  document.getElementById('btn-to-3').disabled=true;
+
+  // Calcul reset
+  document.getElementById('calcule-op').classList.remove('show');
+  document.getElementById('calc-n1').textContent=s.partA.count; document.getElementById('calc-n1').style.color=s.partA.color;
+  document.getElementById('calc-n2').textContent=s.partB.count; document.getElementById('calc-n2').style.color=s.partB.color;
+  document.getElementById('calc-res').textContent=s.total; document.getElementById('calc-res').classList.remove('show');
+  document.getElementById('btn-calcule').disabled=false; document.getElementById('btn-calcule').textContent='💡 Afficher';
+  document.getElementById('btn-to-4').disabled=true;
+
+  // Réponse reset
+  document.getElementById('btn-reponse').disabled=false; document.getElementById('btn-reponse').textContent='🌟 Afficher la réponse';
+  document.getElementById('reponse-banner').classList.remove('show');
+  document.getElementById('reponse-inner').textContent=s.reponse;
+  document.getElementById('btn-end').style.display='none';
+}
+
+// Mise à jour des libellés de boutons selon la situation courante
+function updateBtnLabels(){
+  const s=situations[currentSit];
+  const icons=['🐊','🦜','🍎'];
+  const ic=icons[currentSit];
+  document.getElementById('btn-rev-a').textContent=ic+' '+s.partA.label.charAt(0).toUpperCase()+s.partA.label.slice(1);
+  document.getElementById('btn-rev-b').textContent=ic+' '+s.partB.label.charAt(0).toUpperCase()+s.partB.label.slice(1);
+}
+
+function renderEtapesNav(){
+  const labels=['Je comprends','Je représente','Je calcule','Je réponds'];
+  document.getElementById('etapes-nav').innerHTML=labels.map((lbl,i)=>{
+    const n=i+1; let cls='etape-btn';
+    if(n===currentEtape) cls+=' active'; else if(n<currentEtape) cls+=' done';
+    return `<button class="${cls}" onclick="goToEtape(${n})"><div class="etape-num-circle">${n<currentEtape?'✓':n}</div><br>${lbl}</button>`;
+  }).join('');
+}
+function goToSit(i){ currentSit=i; currentEtape=1; renderSit(); showPanel(1); }
+function goToEtape(n){ currentEtape=n; document.getElementById('badge-etape').textContent='Étape '+n+' / 4'; renderEtapesNav(); showPanel(n); }
+function showPanel(n){ [1,2,3,4].forEach(i=>document.getElementById('panel-'+i).classList.remove('active')); document.getElementById('panel-'+n).classList.add('active'); }
+
+// ─── BTN A : première collection ───
+function revealA(){
+  if(stateA) return; stateA=true;
+  const s=situations[currentSit];
+  const {wA, wTot} = getWidths(s);
+
+  const csg=document.getElementById('consigne');
+  csg.innerHTML=`Il y a <strong>${s.partA.count} ${s.partA.label}</strong> → je prends la bande <strong>${s.partA.count}</strong>.`;
+  csg.classList.add('show');
+
+  setTimeout(()=>{
+    document.getElementById('schema').classList.add('show');
+    // Bande du tout — largeur totale, invisible pour l'instant
+    document.getElementById('bande-tout-wrap').classList.add('show');
+    document.getElementById('tout-lbl').textContent=s.motTotal+' en tout :';
+    document.getElementById('bande-tout').style.width=wTot+'px';
+
+    // Bande A
+    const bandA=document.getElementById('bande-a');
+    bandA.style.width=wA+'px';
+    bandA.style.background=s.partA.color;
+    bandA.style.borderRadius='5px 0 0 5px';
+
+    document.getElementById('lbl-a').textContent=s.partA.label;
+    document.getElementById('wrap-a').classList.add('show');
+
+    setTimeout(()=>{
+      document.getElementById('num-a').textContent=s.partA.count;
+      document.getElementById('num-a').classList.add('show');
+
+      const btn=document.getElementById('btn-rev-a');
+      btn.classList.add('done-btn'); btn.disabled=true;
+      btn.textContent='✓ Bande '+s.partA.count+' posée';
+      document.getElementById('btn-rev-b').disabled=false;
+    }, 350);
+  }, 400);
+}
+
+// ─── BTN B : deuxième collection ───
+function revealB(){
+  if(stateB||!stateA) return; stateB=true;
+  const s=situations[currentSit];
+  const {wA, wB} = getWidths(s);
+
+  const csg=document.getElementById('consigne');
+  csg.innerHTML=`Il y a <strong>${s.partB.count} ${s.partB.label}</strong> → je prends la bande <strong>${s.partB.count}</strong>.`;
+
+  setTimeout(()=>{
+    const bandB=document.getElementById('bande-b');
+    bandB.style.width=wB+'px';
+    bandB.style.background=s.partB.color;
+    bandB.style.borderRadius='0 5px 5px 0';
+
+    document.getElementById('lbl-b').textContent=s.partB.label;
+    document.getElementById('wrap-b').classList.add('show');
+
+    setTimeout(()=>{
+      document.getElementById('num-b').textContent=s.partB.count;
+      document.getElementById('num-b').classList.add('show');
+
+      const btn=document.getElementById('btn-rev-b');
+      btn.classList.add('done-btn'); btn.disabled=true;
+      btn.textContent='✓ Bande '+s.partB.count+' posée';
+      document.getElementById('btn-assemble').disabled=false;
+    }, 350);
+  }, 300);
+}
+
+// ─── BTN ASSEMBLER ───
+function assembler(){
+  if(assembled||!stateB) return; assembled=true;
+  const s=situations[currentSit];
+
+  const csg=document.getElementById('consigne');
+  csg.innerHTML=`J'assemble les deux bandes`;
+
+  setTimeout(()=>{
+    document.getElementById('tout-q').classList.add('hide');
+    setTimeout(()=>{
+      document.getElementById('tout-val').classList.add('show');
+      const btn=document.getElementById('btn-assemble');
+      btn.classList.add('done-btn'); btn.disabled=true;
+      btn.textContent='✓ '+s.total+' '+s.motTotal+' en tout !';
+      document.getElementById('btn-to-3').disabled=false;
+    }, 400);
+  }, 500);
+}
+
+// ─── CALCUL ───
+function showCalcul(){
+  if(calculShown) return; calculShown=true;
+  document.getElementById('calcule-op').classList.add('show');
+  document.getElementById('btn-calcule').disabled=true;
+  document.getElementById('btn-calcule').textContent='✓ Affiché';
+  setTimeout(()=>{
+    document.getElementById('calc-res').classList.add('show');
+    document.getElementById('btn-to-4').disabled=false;
+  }, 600);
+}
+
+// ─── RÉPONSE ───
+function showReponse(){
+  if(reponseShown) return; reponseShown=true;
+  document.getElementById('reponse-banner').classList.add('show');
+  document.getElementById('btn-reponse').disabled=true;
+  document.getElementById('btn-reponse').textContent='✓ Réponse affichée';
+  setTimeout(()=>{ document.getElementById('btn-end').style.display='inline-block'; }, 700);
+}
+
+function markSitDone(){
+  doneSits[currentSit]=true;
+  const next=currentSit+1;
+  if(next<situations.length) goToSit(next);
+  else alert('🎉 Les 3 situations sont terminées !');
+}
+
+renderSit(); showPanel(1);
+</script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Séance 20 — recherche tout / barres | Seb'Interactal</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+:root {
+  --blue:#4A8DB5; --blue-lt:#E6F1FB;
+  --amber:#EF9F27; --amber-lt:#FFF9E6;
+  --green:#5DCAA5; --green-lt:#EAF3DE; --green-dk:#085041;
+  --coral:#D85A30; --coral-lt:#FAECE7;
+  --purple:#7F77DD; --purple-lt:#EEEDFE;
+  --pink:#E91E8C; --pink-lt:#FCE4F3;
+  --red:#A32D2D;
+  --accent:#4A8DB5; --accent-lt:#E6F1FB;
+}
+body { font-family:Arial,sans-serif; background:#F8F6F0; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; padding:14px; }
+.app { width:100%; max-width:960px; display:flex; flex-direction:column; gap:12px; }
+
+.header { background:#2E6A4A; border-radius:16px; padding:13px 22px; display:flex; justify-content:space-between; align-items:center; }
+.header-title { color:white; font-size:22px; font-weight:bold; }
+.header-sub   { color:#9FE1CB; font-size:13px; margin-top:2px; }
+.header-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.badge { padding:5px 14px; border-radius:20px; font-size:13px; font-weight:bold; white-space:nowrap; }
+.badge-etape { background:#FAC775; color:#633806; }
+.badge-sit   { background:rgba(255,255,255,0.2); color:white; }
+
+.sit-selector { display:flex; gap:8px; }
+.sit-btn { flex:1; padding:11px 8px; border-radius:14px; border:2.5px solid #D0D0C8; background:white; font-size:14px; font-weight:bold; color:#999; cursor:pointer; text-align:center; transition:all 0.2s; line-height:1.4; }
+.sit-btn .sit-icon { font-size:22px; display:block; margin-bottom:3px; }
+.sit-btn.active { border-color:#2E6A4A; background:#2E6A4A; color:white; }
+.sit-btn.done   { border-color:var(--green); background:var(--green-lt); color:var(--green-dk); }
+
+.etapes-nav { display:flex; gap:8px; }
+.etape-btn { flex:1; padding:9px 6px; border-radius:12px; border:2px solid #D0D0C8; background:white; font-size:13px; font-weight:bold; color:#999; cursor:pointer; text-align:center; transition:all 0.2s; line-height:1.3; }
+.etape-btn.active { border-color:#2E6A4A; background:#2E6A4A; color:white; }
+.etape-btn.done   { border-color:var(--green); background:var(--green-lt); color:var(--green-dk); }
+.etape-num-circle { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; font-size:11px; margin-bottom:2px; background:rgba(255,255,255,0.3); }
+
+.enonce-card { border:2.5px solid var(--amber); border-radius:16px; padding:14px 18px; display:flex; gap:16px; align-items:center; }
+.enonce-card.s1 { background:#FFF9E6; }
+.enonce-card.s2 { background:#FFF0F5; }
+.enonce-card.s3 { background:var(--purple-lt); border-color:var(--purple); }
+.enonce-text { flex:1; font-size:21px; color:#333; line-height:1.7; }
+.enonce-text .question { font-size:19px; font-weight:bold; color:#222; display:block; margin-top:6px; }
+.enonce-photo { width:120px; height:90px; border:2px dashed #CCC; border-radius:12px; background:rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ph-icon { font-size:54px; line-height:1; }
+
+.panel { background:white; border-radius:16px; border:2px solid #E0DDD5; padding:20px 24px; min-height:260px; display:none; flex-direction:column; gap:14px; }
+.panel.active { display:flex; animation:slideIn 0.3s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.panel-title { font-size:18px; font-weight:bold; color:#2E6A4A; border-bottom:2px solid var(--green-lt); padding-bottom:8px; display:flex; align-items:center; gap:10px; }
+.panel-num { width:32px; height:32px; border-radius:50%; background:#2E6A4A; color:white; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* ── COMPRENDS ── */
+.comprends-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.comprends-card { border-radius:12px; padding:14px 16px; font-size:16px; line-height:1.6; }
+.cc-blue   { background:var(--blue-lt);   border:2px solid #B5D4F4; color:#185FA5; }
+.cc-amber  { background:var(--amber-lt);  border:2px solid #FAC775; color:#633806; }
+.cc-green  { background:var(--green-lt);  border:2px solid #9FE1CB; color:var(--green-dk); }
+.cc-pink   { background:var(--pink-lt);   border:2px solid #F48FB1; color:#880E4F; }
+.cc-purple { background:var(--purple-lt); border:2px solid #AFA9EC; color:#3C3489; }
+.comprends-card strong { font-size:17px; }
+.vocab-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.vocab-tag  { background:#2E6A4A; color:white; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:bold; }
+
+/* ── REPR CUBES — style séance 24 ── */
+.repr-zone { display:flex; flex-direction:column; gap:10px; width:100%; }
+.repr-cubes-and-total { display:flex; flex-direction:column; gap:8px; }
+
+/* Barre totale en haut */
+.total-barre-wrap { display:flex; flex-direction:column; align-items:flex-start; gap:4px; opacity:0; transition:opacity 0.5s; }
+.total-barre-wrap.show { opacity:1; }
+.total-label-top { font-size:16px; font-weight:bold; color:#333; }
+.total-barre-empty { height:52px; border:3px solid #888; border-radius:6px; background:white; display:flex; align-items:center; justify-content:center; }
+.total-number { font-size:40px; font-weight:900; color:#333; opacity:0; transition:opacity 0.6s; }
+.total-number.show { opacity:1; }
+
+/* Deux barres en bas */
+.two-bars-row { display:flex; gap:0; align-items:flex-start; }
+.bar-group { display:flex; flex-direction:column; align-items:center; gap:4px; opacity:0; transform:translateY(10px); transition:opacity 0.4s, transform 0.4s; }
+.bar-group.show { opacity:1; transform:translateY(0); }
+.bar-label { font-size:15px; font-weight:bold; text-align:center; min-height:24px; }
+.cube-bar { display:flex; gap:3px; flex-wrap:nowrap; justify-content:flex-start; min-height:44px; }
+.cube-bar.assembled { gap:0; }
+.cube { width:38px; height:38px; border-radius:4px; border:2px solid rgba(0,0,0,0.18); flex-shrink:0; animation:cubePop 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes cubePop { 0%{transform:scale(0);opacity:0} 70%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+.bar-count { font-size:28px; font-weight:900; opacity:0; transition:opacity 0.5s; min-height:36px; }
+.bar-count.show { opacity:1; }
+
+/* Boutons */
+.repr-btns { display:flex; gap:10px; width:100%; flex-wrap:wrap; }
+.btn-repr { flex:1; padding:13px; border-radius:14px; border:3px solid; font-size:15px; font-weight:bold; cursor:pointer; transition:all 0.15s; text-align:center; min-width:120px; }
+.btn-repr:disabled { opacity:0.35; cursor:not-allowed; }
+.btn-repr.done-btn { background:var(--green-lt)!important; border-color:var(--green)!important; color:var(--green-dk)!important; }
+.btn-a { background:var(--blue-lt); border-color:var(--blue); color:#185FA5; }
+.btn-b { background:var(--coral-lt); border-color:var(--coral); color:var(--coral); }
+.btn-assemble { background:var(--green-lt); border-color:#2E6A4A; color:#2E6A4A; box-shadow:0 4px 0 #1A4A2E; transition:transform 0.08s, box-shadow 0.08s; }
+.btn-assemble:active { transform:translateY(3px); box-shadow:0 1px 0 #1A4A2E; }
+
+/* ── CALCULE ── */
+.calcule-zone { display:flex; flex-direction:column; gap:16px; align-items:center; }
+.calcule-op { display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center; opacity:0; transition:opacity 0.5s; }
+.calcule-op.show { opacity:1; }
+.calc-num  { font-size:56px; font-weight:900; }
+.calc-sym  { font-size:48px; font-weight:900; color:#555; }
+.calc-result { font-size:56px; font-weight:900; background:#2E6A4A; color:white; padding:6px 22px; border-radius:16px; opacity:0; transition:opacity 0.6s 0.3s; }
+.calc-result.show { opacity:1; }
+.btn-calcule { padding:16px 40px; font-size:19px; font-weight:bold; border-radius:16px; border:3px solid #0F6E56; background:linear-gradient(to bottom,#9FE1CB,#5DCAA5); color:var(--green-dk); cursor:pointer; box-shadow:0 5px 0 #0A5040; transition:transform 0.08s, box-shadow 0.08s; }
+.btn-calcule:active  { transform:translateY(4px); box-shadow:0 1px 0 #0A5040; }
+.btn-calcule:disabled { opacity:0.4; cursor:not-allowed; box-shadow:none; }
+
+/* ── RÉPONSE cursive banner ── */
+.reponse-zone { display:flex; flex-direction:column; gap:16px; align-items:center; }
+.btn-reponse { padding:15px 38px; font-size:19px; font-weight:bold; border-radius:16px; cursor:pointer; border:3px solid #2E6A4A; background:var(--green-lt); color:#2E6A4A; box-shadow:0 5px 0 #1A4A2E; transition:transform 0.08s, box-shadow 0.08s; }
+.btn-reponse:active  { transform:translateY(4px); box-shadow:0 1px 0 #1A4A2E; }
+.btn-reponse:disabled { opacity:0.4; cursor:not-allowed; box-shadow:none; }
+.reponse-banner { opacity:0; transition:opacity 0.8s; }
+.reponse-banner.show { opacity:1; }
+.reponse-inner {
+  background:linear-gradient(135deg,#E91E8C,#C2185B);
+  border-radius:18px; padding:18px 32px;
+  font-size:34px; font-style:italic; color:white; text-align:center; line-height:1.6;
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing:0.5px;
+  box-shadow: 0 6px 20px rgba(233,30,140,0.35);
+}
+
+/* ── NAV ── */
+.nav-row { display:flex; gap:10px; justify-content:flex-end; margin-top:auto; }
+.btn-nav-prev { padding:11px 22px; font-size:15px; font-weight:bold; border-radius:14px; border:2px solid #D0D0C8; background:white; color:#888; cursor:pointer; }
+.btn-nav-next { padding:11px 24px; font-size:15px; font-weight:bold; border-radius:14px; border:3px solid #2E6A4A; background:#2E6A4A; color:white; cursor:pointer; box-shadow:0 4px 0 #1A4A2E; transition:transform 0.08s, box-shadow 0.08s; }
+.btn-nav-next:active   { transform:translateY(3px); box-shadow:0 1px 0 #1A4A2E; }
+.btn-nav-next:disabled { opacity:0.4; cursor:not-allowed; box-shadow:none; }
+.btn-nav-end { padding:11px 24px; font-size:15px; font-weight:bold; border-radius:14px; border:3px solid var(--green); background:var(--green-lt); color:var(--green-dk); cursor:pointer; display:none; }
+.footer { display:flex; justify-content:space-between; font-size:11px; color:#bbb; padding-top:2px; }
+.footer-logo { font-weight:bold; color:#2E6A4A; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="header-title">Je cherche un tout - J'utilise des cubes </div>
+      <div class="header-sub">Séance 20 — Guidée par l'enseignant - TBI</div>
+    </div>
+    <div class="header-right">
+      <div class="badge badge-sit"   id="badge-sit">Situation 1 / 3</div>
+      <div class="badge badge-etape" id="badge-etape">Étape 1 / 4</div>
+    </div>
+  </div>
+
+  <div class="sit-selector">
+    <button class="sit-btn active" id="sit-btn-0" onclick="goToSit(0)">
+      <span class="sit-icon">🦋</span>Le jardin</button>
+    <button class="sit-btn" id="sit-btn-1" onclick="goToSit(1)">
+      <span class="sit-icon">🍰</span>La boîte à gâteaux
+    </button>
+    <button class="sit-btn" id="sit-btn-2" onclick="goToSit(2)">
+      <span class="sit-icon">🏀</span>Le sport
+    </button>
+  </div>
+
+  <div class="etapes-nav" id="etapes-nav"></div>
+  <div class="enonce-card" id="enonce-card"></div>
+
+  <!-- PANEL 1 -->
+  <div class="panel active" id="panel-1">
+    <div class="panel-title"><div class="panel-num">1</div> Je comprends le problème</div>
+    <div class="comprends-grid" id="grid-comprends"></div>
+    <div class="nav-row">
+      <button class="btn-nav-next" onclick="goToEtape(2)">Étape 2 — Je représente →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2 -->
+  <div class="panel" id="panel-2">
+    <div class="panel-title"><div class="panel-num">2</div> Je représente avec des cubes</div>
+    <div class="repr-zone">
+      <div class="repr-cubes-and-total">
+
+        <!-- BARRE TOTALE VIDE EN HAUT -->
+        <div class="total-barre-wrap" id="total-barre-wrap">
+          <div class="total-label-top" id="total-label-top"></div>
+          <div class="total-barre-empty" id="total-barre-empty">
+            <span class="total-number" id="total-number"></span>
+          </div>
+        </div>
+
+        <!-- DEUX BARRES EN BAS -->
+        <div class="two-bars-row">
+          <div class="bar-group" id="group-a">
+            <div class="cube-bar" id="bar-a"></div>
+            <div class="bar-label" id="lbl-a"></div>
+            <div class="bar-count" id="count-a"></div>
+          </div>
+          <div class="bar-group" id="group-b">
+            <div class="cube-bar" id="bar-b"></div>
+            <div class="bar-label" id="lbl-b"></div>
+            <div class="bar-count" id="count-b"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="repr-btns">
+      <button class="btn-repr btn-a" id="btn-rev-a" onclick="revealA()">…</button>
+      <button class="btn-repr btn-b" id="btn-rev-b" onclick="revealB()" disabled>…</button>
+      <button class="btn-repr btn-assemble" id="btn-assemble" onclick="assembler()" disabled>🔗 Assembler les deux barres</button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(1)">← Étape 1</button>
+      <button class="btn-nav-next" id="btn-to-3" onclick="goToEtape(3)" disabled>Étape 3 — Je calcule →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3 -->
+  <div class="panel" id="panel-3">
+    <div class="panel-title"><div class="panel-num">3</div> Je calcule</div>
+    <div class="calcule-zone">
+      <div class="calcule-op" id="calcule-op">
+        <span class="calc-num" id="calc-n1"></span>
+        <span class="calc-sym">+</span>
+        <span class="calc-num" id="calc-n2"></span>
+        <span class="calc-sym">=</span>
+        <span class="calc-result" id="calc-res"></span>
+      </div>
+      <button class="btn-calcule" id="btn-calcule" onclick="showCalcul()">💡 Afficher</button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(2)">← Étape 2</button>
+      <button class="btn-nav-next" id="btn-to-4" onclick="goToEtape(4)" disabled>Étape 4 — Je réponds →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 4 -->
+  <div class="panel" id="panel-4">
+    <div class="panel-title"><div class="panel-num">4</div> Je réponds</div>
+    <div class="reponse-zone">
+      <button class="btn-reponse" id="btn-reponse" onclick="showReponse()">🌟 Afficher la réponse</button>
+      <div class="reponse-banner" id="reponse-banner">
+        <div class="reponse-inner" id="reponse-inner"></div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav-prev" onclick="goToEtape(3)">← Étape 3</button>
+      <button class="btn-nav-end" id="btn-end" onclick="markSitDone()">✅ Situation terminée →</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>© 2026 Seb'Interactal — Usage classe et IEF uniquement — Outil TBI enseignant</span>
+    <span class="footer-logo">Seb'Interactal</span>
+  </div>
+</div>
+
+<script>
+const situations = [
+  {
+    id:0, cls:'s1',
+    titre: 'Le jardin',
+    enonce: 'Dans le jardin, il y a <strong>9 papillons jaunes</strong> et <strong>6 papillons bleus</strong>.',
+    question: 'Combien y a-t-il de papillons en tout ?',
+    photoIcon: '🦋',
+    partA:{ label:'Les papillons jaunes', icon:'🟨', count:9, color:'#D85A30', shadow:'#A03010' },
+    partB:{ label:'Les papillons bleus', icon:'🟦', count:6, color:'#5DCAA5', shadow:'#0A5040' },
+    motTotal:'papillons', total:15,
+    reponse:"Il y a 15 papillons en tout dans le jardin.",
+    comprends:[
+      {cls:'cc-blue',  title:"Qu'est-ce qu'on sait ?",   content:"Il y a <strong>9 papillons jaunes</strong> et <strong>6 papillons bleus</strong>."},
+      {cls:'cc-amber', title:"Qu'est-ce qu'on cherche ?", content:"Le nombre total de papillons dans le panier."},
+      {cls:'cc-green', title:"Un élève réexplique :",     content:"<em>« Il y a deux sortes de papillons. Je cherche combien il y en a en tout. »</em>"},
+      {cls:'cc-pink',  title:"Vocabulaire :",             vocab:['']}
+    ]
+  },
+  {
+    id:1, cls:'s2',
+    titre:'La boîte à gâteaux',
+    enonce:'Dans la boîte, il y a <strong>11 cupcakes</strong> et <strong>3 cookies</strong>.',
+    question:'Combien y a-t-il de gâteaux en tout ?',
+    photoIcon:'🍰',
+    partA:{ label:'Les cupcakes', icon:'🧁', count:11, color:'#EF9F27', shadow:'#C07010' },
+    partB:{ label:'Les cookies', icon:'🍪', count:3, color:'#D85A30', shadow:'#A03010' },
+    motTotal:'gâteaux', total:14,
+    reponse:"Il y a 14 gâteaux en tout dans la boîte.",
+    comprends:[
+      {cls:'cc-blue',  title:"Qu'est-ce qu'on sait ?",   content:"Il y a <strong>11 cupcakes</strong> et <strong>3 cookies</strong>."},
+      {cls:'cc-amber', title:"Qu'est-ce qu'on cherche ?", content:"Le nombre total de gâteaux dans la boîte."},
+      {cls:'cc-green', title:"Un élève réexplique :",     content:"<em>« Il y a deux sortes de gâteaux. Je cherche le total. »</em>"},
+      {cls:'cc-pink',  title:"Vocabulaire :",             vocab:[]}
+    ]
+  },
+  {
+    id:2, cls:'s3',
+    titre:'Le sport',
+    enonce:'Dans le sac de sport, il y a <strong>8 ballons rouges</strong> et <strong>9 ballons jaunes</strong>.',
+    question:'Combien y a-t-il de ballons en tout ?',
+    photoIcon:'🏀',
+    partA:{ label:'Les ballons rouges', icon:'🔴', count:8, color:'#D85A30', shadow:'#A03010' },
+    partB:{ label:'Les ballons jaunes', icon:'🟡', count:9, color:'#EF9F27', shadow:'#C07010' },
+    motTotal:'ballons', total:17,
+    reponse:"Il y a 17 ballons en tout dans le sac de sport.",
+    comprends:[
+      {cls:'cc-blue',   title:"Qu'est-ce qu'on sait ?",   content:"Il y a <strong>8 ballons rouges</strong> et <strong>9 ballons jaunes</strong>."},
+      {cls:'cc-amber',  title:"Qu'est-ce qu'on cherche ?", content:"Le nombre total de ballons dans le sac."},
+      {cls:'cc-green',  title:"Un élève réexplique :",     content:"<em>« Il y a deux couleurs de ballons. Je cherche le total. »</em>"},
+      {cls:'cc-purple', title:"Vocabulaire :",             vocab:[]}
+    ]
+  }
+];
+
+let currentSit=0, currentEtape=1;
+let stateA=false, stateB=false, assembled=false, calculShown=false, reponseShown=false;
+let doneSits=[false,false,false];
+
+/* ── RENDU ── */
+function renderSit() {
+  const s = situations[currentSit];
+  stateA=false; stateB=false; assembled=false; calculShown=false; reponseShown=false;
+
+  situations.forEach((_,i)=>{
+    const b=document.getElementById('sit-btn-'+i);
+    b.classList.remove('active','done');
+    if(i===currentSit) b.classList.add('active');
+    else if(doneSits[i]) b.classList.add('done');
+  });
+
+  document.getElementById('badge-sit').textContent = 'Situation '+(currentSit+1)+' / 3';
+
+  const ec=document.getElementById('enonce-card');
+  ec.className='enonce-card '+s.cls;
+  ec.innerHTML=`<div class="enonce-text">${s.enonce}<span class="question">${s.question}</span></div>
+    <div class="enonce-photo"><span class="ph-icon">${s.photoIcon}</span></div>`;
+
+  document.getElementById('grid-comprends').innerHTML = s.comprends.map(c=>{
+    const content=c.vocab
+      ? `<div class="vocab-list">${c.vocab.map(v=>`<span class="vocab-tag">${v}</span>`).join('')}</div>`
+      : c.content;
+    return `<div class="comprends-card ${c.cls}"><strong>${c.title}</strong><br>${content}</div>`;
+  }).join('');
+
+  renderEtapesNav();
+
+  // Reset panel 2
+  document.getElementById('total-barre-wrap').classList.remove('show');
+  document.getElementById('total-label-top').textContent='Les '+s.motTotal+' en tout : '+s.total;
+  document.getElementById('total-barre-empty').style.width=(s.total*38)+'px';
+  document.getElementById('total-number').textContent=s.total;
+  document.getElementById('total-number').classList.remove('show');
+  ['a','b'].forEach(x=>{
+    document.getElementById('group-'+x).classList.remove('show');
+    document.getElementById('bar-'+x).innerHTML='';
+    document.getElementById('bar-'+x).classList.remove('assembled');
+    document.getElementById('count-'+x).textContent='';
+    document.getElementById('count-'+x).classList.remove('show');
+    document.getElementById('lbl-'+x).textContent='';
+  });
+
+  const bA=document.getElementById('btn-rev-a');
+  bA.textContent='🔵 Afficher — '+s.partA.label;
+  bA.className='btn-repr btn-a'; bA.disabled=false; bA.classList.remove('done-btn');
+  const bB=document.getElementById('btn-rev-b');
+  bB.textContent='🔴 Afficher — '+s.partB.label;
+  bB.className='btn-repr btn-b'; bB.disabled=true; bB.classList.remove('done-btn');
+  const bAs=document.getElementById('btn-assemble');
+  bAs.textContent='🔗 Assembler les deux barres';
+  bAs.disabled=true; bAs.classList.remove('done-btn');
+  document.getElementById('btn-to-3').disabled=true;
+
+  // Calcul
+  document.getElementById('calcule-op').classList.remove('show');
+  document.getElementById('calc-n1').textContent=s.partA.count;
+  document.getElementById('calc-n1').style.color=s.partA.color;
+  document.getElementById('calc-n2').textContent=s.partB.count;
+  document.getElementById('calc-n2').style.color=s.partB.color;
+  document.getElementById('calc-res').textContent=s.total;
+  document.getElementById('calc-res').classList.remove('show');
+  document.getElementById('btn-calcule').disabled=false;
+  document.getElementById('btn-calcule').textContent='💡 Afficher';
+  document.getElementById('btn-to-4').disabled=true;
+
+  // Réponse
+  document.getElementById('btn-reponse').disabled=false;
+  document.getElementById('btn-reponse').textContent='🌟 Afficher la réponse';
+  document.getElementById('reponse-banner').classList.remove('show');
+  document.getElementById('reponse-inner').innerHTML=s.reponse;
+  document.getElementById('btn-end').style.display='none';
+}
+
+function renderEtapesNav(){
+  const labels=['Je comprends','Je représente','Je calcule','Je réponds'];
+  document.getElementById('etapes-nav').innerHTML=labels.map((lbl,i)=>{
+    const n=i+1; let cls='etape-btn';
+    if(n===currentEtape) cls+=' active';
+    else if(n<currentEtape) cls+=' done';
+    return `<button class="${cls}" onclick="goToEtape(${n})"><div class="etape-num-circle">${n<currentEtape?'✓':n}</div><br>${lbl}</button>`;
+  }).join('');
+}
+
+function goToSit(i){ currentSit=i; currentEtape=1; renderSit(); showPanel(1); }
+function goToEtape(n){ currentEtape=n; document.getElementById('badge-etape').textContent='Étape '+n+' / 4'; renderEtapesNav(); showPanel(n); }
+function showPanel(n){ [1,2,3,4].forEach(i=>document.getElementById('panel-'+i).classList.remove('active')); document.getElementById('panel-'+n).classList.add('active'); }
+
+/* ── REVEAL A ── */
+function revealA(){
+  if(stateA) return; stateA=true;
+  const s=situations[currentSit];
+  document.getElementById('lbl-a').textContent=s.partA.label;
+  document.getElementById('lbl-a').style.color=s.partA.color;
+  document.getElementById('group-a').classList.add('show');
+  const barEl=document.getElementById('bar-a');
+  for(let i=0;i<s.partA.count;i++){
+    setTimeout(()=>{
+      const cube=document.createElement('div');
+      cube.className='cube';
+      cube.style.background=s.partA.color;
+      cube.style.boxShadow=`0 4px 0 ${s.partA.shadow}`;
+      barEl.appendChild(cube);
+    },i*90);
+  }
+  setTimeout(()=>{
+    const cnt=document.getElementById('count-a');
+    cnt.textContent=s.partA.count; cnt.style.color=s.partA.color; cnt.classList.add('show');
+    const btn=document.getElementById('btn-rev-a');
+    btn.classList.add('done-btn'); btn.disabled=true;
+    btn.textContent='✓ '+s.partA.count+' cubes posés';
+    document.getElementById('btn-rev-b').disabled=false;
+  }, s.partA.count*90+250);
+}
+
+/* ── REVEAL B ── */
+function revealB(){
+  if(stateB||!stateA) return; stateB=true;
+  const s=situations[currentSit];
+  document.getElementById('lbl-b').textContent=s.partB.label;
+  document.getElementById('lbl-b').style.color=s.partB.color;
+  document.getElementById('group-b').classList.add('show');
+  const barEl=document.getElementById('bar-b');
+  for(let i=0;i<s.partB.count;i++){
+    setTimeout(()=>{
+      const cube=document.createElement('div');
+      cube.className='cube';
+      cube.style.background=s.partB.color;
+      cube.style.boxShadow=`0 4px 0 ${s.partB.shadow}`;
+      barEl.appendChild(cube);
+    },i*90);
+  }
+  setTimeout(()=>{
+    const cnt=document.getElementById('count-b');
+    cnt.textContent=s.partB.count; cnt.style.color=s.partB.color; cnt.classList.add('show');
+    const btn=document.getElementById('btn-rev-b');
+    btn.classList.add('done-btn'); btn.disabled=true;
+    btn.textContent='✓ '+s.partB.count+' cubes posés';
+    document.getElementById('btn-assemble').disabled=false;
+  }, s.partB.count*90+250);
+}
+
+/* ── ASSEMBLER ── */
+function assembler(){
+  if(assembled||!stateB) return; assembled=true;
+  const s=situations[currentSit];
+  const barA=document.getElementById('bar-a');
+  const barB=document.getElementById('bar-b');
+  barA.classList.add('assembled');
+  barB.classList.add('assembled');
+  const cubesA=[...barA.querySelectorAll('.cube')];
+  const cubesB=[...barB.querySelectorAll('.cube')];
+  if(cubesA.length>0) cubesA[cubesA.length-1].style.borderRadius='4px 0 0 4px';
+  if(cubesB.length>0) cubesB[0].style.borderRadius='0 4px 4px 0';
+  setTimeout(()=>{
+    document.getElementById('total-barre-wrap').classList.add('show');
+    setTimeout(()=>{
+      document.getElementById('total-number').classList.add('show');
+      const btn=document.getElementById('btn-assemble');
+      btn.classList.add('done-btn'); btn.disabled=true;
+      btn.textContent='✓ '+s.total+' '+s.motTotal+' en tout !';
+      document.getElementById('btn-to-3').disabled=false;
+    },700);
+  },400);
+}
+
+/* ── CALCUL ── */
+function showCalcul(){
+  if(calculShown) return; calculShown=true;
+  document.getElementById('calcule-op').classList.add('show');
+  document.getElementById('btn-calcule').disabled=true;
+  document.getElementById('btn-calcule').textContent='✓ Affiché';
+  setTimeout(()=>{
+    document.getElementById('calc-res').classList.add('show');
+    document.getElementById('btn-to-4').disabled=false;
+  },600);
+}
+
+/* ── RÉPONSE ── */
+function showReponse(){
+  if(reponseShown) return; reponseShown=true;
+  document.getElementById('reponse-banner').classList.add('show');
+  document.getElementById('btn-reponse').disabled=true;
+  document.getElementById('btn-reponse').textContent='✓ Réponse affichée';
+  setTimeout(()=>{ document.getElementById('btn-end').style.display='inline-block'; },700);
+}
+
+function markSitDone(){
+  doneSits[currentSit]=true;
+  const next=currentSit+1;
+  if(next<situations.length) goToSit(next);
+  else alert('🎉 Les 3 situations sont terminées !');
+}
+
+renderSit(); showPanel(1);
+</script>
+</body>
+</html>
